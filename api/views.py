@@ -649,7 +649,7 @@ def questions(request):
             return response.Response({
                 'estado': 200,
                 'validar': True,
-                'mensaje': '',
+                'mensaje': '¡Vamos para aprender! Prepárate para sumergirte mientras avanzamos juntos. ¡Veamos qué descubrimos!',
                 'dato': serializer.data
             }, status = status.HTTP_200_OK)
         except KeyError:

@@ -1,3 +1,4 @@
+from django.conf import settings
 from .models import *
 from rest_framework import serializers
 
@@ -7,14 +8,18 @@ class UsuarioSerializer(serializers.ModelSerializer):
         fields = ['foto', 'nombre', 'correo', 'password', 'racha', 'registro']
 
 class ProgresoSerializer(serializers.ModelSerializer):
+    lenguajeLogo = serializers.SerializerMethodField()
     lenguajeNombre = serializers.SerializerMethodField()
+    
+    def get_lenguajeLogo(self, obj):
+        return settings.BASE_URL + obj.lenguaje.logo.url
     
     def get_lenguajeNombre(self, obj):
         return obj.lenguaje.nombre
     
     class Meta:
         model = Progreso
-        fields = ['lenguajeNombre', 'progresoLenguaje']
+        fields = ['lenguajeLogo', 'lenguajeNombre', 'progresoLenguaje']
     
 class LenguajeSerializer(serializers.ModelSerializer):
     class Meta:
