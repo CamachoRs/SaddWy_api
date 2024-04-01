@@ -21,6 +21,7 @@ urlpatterns = [
     path('v01/ranking/', ranking),
     path('v01/edit/', editUser),
     path('v01/questions/', questions),
+    path('v01/profile/', profile),
 
     path('v01/recovery/', recoveryEmail),
     path('v01/recover/<str:token>/', recoverAccount),

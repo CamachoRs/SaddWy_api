@@ -179,7 +179,6 @@ def login(request):
             return http_400_bad_request('Lo siento, el correo y/o contraseña ingresados son incorrectos. Por favor, inténtalo nuevamente')
 
         usuarioSerializer = UsuarioSerializer(usuario)
-        progresoSerializer = ProgresoSerializer(Progreso.objects.filter(usuario = usuario.id), many = True)
         token = tokens.RefreshToken.for_user(usuario) 
         for lenguaje in Lenguaje.objects.filter(estado = True):
             if not Progreso.objects.filter(usuario = usuario, lenguaje = lenguaje).exists():
@@ -191,16 +190,10 @@ def login(request):
             'validar': True,
             'mensaje': '¡Inicio de sesión exitoso!',
             'dato': {
-                'usuario': {
-                    'foto': settings.BASE_URL + usuarioSerializer.data['foto'],
-                    'nombre': usuarioSerializer.data['nombre'],
-                    'correo': usuarioSerializer.data['correo'],
-                    'racha': usuarioSerializer.data['racha'],
-                    'registro': usuarioSerializer.data['registro'],
-                    'acceso': str(token.access_token),
-                    'actualizar': str(token)
-                },
-                'progreso': progresoSerializer.data
+                'foto': settings.BASE_URL + usuarioSerializer.data['foto'],
+                'nombre': usuarioSerializer.data['nombre'],
+                'acceso': str(token.access_token),
+                'actualizar': str(token)
             }
         }, status = status.HTTP_200_OK)
     except KeyError:
@@ -365,6 +358,59 @@ def recoverAccount(request, token):
         return http_400_bad_request('Por favor, proporciona los datos obligatorios que faltan en la solicitud')
     except (Usuario.DoesNotExist, TokenError.TokenError):
         return http_400_bad_request('Lo siento, pero el tiempo límite para recuperar su cuenta ha expirado. Por favor, solicite un nuevo correo')
+    except Exception as e:
+        return http_500_internal_server_error(str(e))
+
+@swagger_auto_schema(
+    method = 'GET',
+    operation_summary = 'Perfil de usuario',
+    responses = {
+        200: 'Perfil del usuario obtenido exitosamente.',
+        400: 'Error en la solicitud. Puede ocurrir si el token de acceso proporcionado es inválido o tiene un formato incorrecto.',
+        500: 'Error interno del servidor.'
+    },
+    operation_description = 
+    """
+    Este endpoint permite a un usuario autenticado obtener información detallada de su perfil, incluyendo su información personal y su progreso en la aplicación.
+
+    ---
+    parametros
+    - nombre: Authorization
+        en: header
+        descripción: Token de autenticación del usuario.
+        requerido: true
+        tipo: string
+        format: JWT
+    """
+)
+@decorators.api_view(['GET'])
+@decorators.permission_classes([permissions.IsAuthenticated])
+def profile(request):
+    try:
+        token = request.headers.get('Authorization').split()[1]
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms = ["HS256"])
+        usuario = Usuario.objects.get(id = payload['user_id'])
+        usuarioSerializer = UsuarioSerializer(usuario)
+        progresoSerializer = ProgresoSerializer(Progreso.objects.filter(usuario = usuario.id), many = True)
+        return response.Response({
+            'estado': 200,
+            'validar': True,
+            'mensaje': '',
+            'dato': {
+                'usuario': {
+                    'foto': settings.BASE_URL + usuarioSerializer.data['foto'],
+                    'nombre': usuarioSerializer.data['nombre'],
+                    'correo': usuarioSerializer.data['correo'],
+                    'racha': usuarioSerializer.data['racha'],
+                    'registro': usuarioSerializer.data['registro']
+                },
+                'progreso': progresoSerializer.data
+            }
+        }, status = status.HTTP_200_OK)
+    except (IndexError, jwt.exceptions.InvalidTokenError):
+        return http_400_bad_request('El token de acceso que has proporcionado no es válido o tiene un formato incorrecto. Por favor, revisa y asegúrate de que el token sea correcto')
+    except (jwt.exceptions.DecodeError, Usuario.DoesNotExist, Progreso.DoesNotExist):
+        return http_500_internal_server_error('Lo siento, ha ocurrido un problema al procesar tu solicitud. Por favor, intenta nuevamente más tarde')
     except Exception as e:
         return http_500_internal_server_error(str(e))
 
@@ -576,7 +622,7 @@ def editUser(request):
         return http_500_internal_server_error(str(e))
 
 @swagger_auto_schema(
-    method = 'POST',
+    method = 'GET',
     operation_summary = 'Obtener preguntas por nivel',
     responses = {
         200: 'Éxito. Devuelve las preguntas del nivel especificado.',
@@ -605,7 +651,7 @@ def editUser(request):
     """
 )
 @swagger_auto_schema(
-    method = 'PUT',
+    method = 'POST',
     operation_summary = 'Actualizar progreso y estado del usuario',
     responses = {
         200: 'Éxito. Devuelve información actualizada del usuario y su progreso.',
@@ -639,10 +685,10 @@ def editUser(request):
         tipo: string
     """
 )
-@decorators.api_view(['POST', 'PUT'])
+@decorators.api_view(['GET', 'POST'])
 @decorators.permission_classes([permissions.IsAuthenticated])
 def questions(request):
-    if request.method == 'POST':
+    if request.method == 'GET':
         try:
             niveles = Nivel.objects.get(nombre = request.data['nivel'], estado = True)
             serializer = PreguntaSerializer(Pregunta.objects.filter(nivel = niveles, estado = True), many = True)
@@ -658,7 +704,7 @@ def questions(request):
             return http_400_bad_request('El nivel especificado no existe o no está disponible en este momento.')
         except Exception as e:
             return http_500_internal_server_error(str(e))
-    elif request.method == 'PUT':
+    elif request.method == 'POST':
         try:
             token = request.headers.get('Authorization').split()[1]
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms = ["HS256"])
@@ -695,22 +741,10 @@ def questions(request):
             num_nivelesPermitidos = sum(valor for valor in progreso.nivelesPermitidos.values() if valor)
             progreso.progresoLenguaje = (num_nivelesPermitidos - 1)*100 / nivel.totalPreguntas
             progreso.save()
-            usuarioSerializer = UsuarioSerializer(usuario)
-            progresoSerializer = ProgresoSerializer(Progreso.objects.filter(usuario = usuario.id), many = True)
             return response.Response({
                 'estado': 200,
                 'validar': True,
-                'mensaje': '¡Fantástico! ¡Has completado todas las preguntas!. ¡Sigue así y estarás dominando la programación en poco tiempo!',
-                'dato': {
-                    'usuario': {
-                        'foto': settings.BASE_URL + usuarioSerializer.data['foto'],
-                        'nombre': usuarioSerializer.data['nombre'],
-                        'correo': usuarioSerializer.data['correo'],
-                        'racha': usuarioSerializer.data['racha'],
-                        'registro': usuarioSerializer.data['registro']
-                    },
-                    'progreso': progresoSerializer.data
-                }
+                'mensaje': '¡Fantástico! ¡Has completado todas las preguntas!. ¡Sigue así y estarás dominando la programación en poco tiempo!'
             })
         except KeyError:
             return http_400_bad_request('Por favor, proporciona los datos obligatorios que faltan en la solicitud')
