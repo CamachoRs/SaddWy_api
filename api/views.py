@@ -29,7 +29,7 @@ import difflib, re, jwt, imghdr, base64, io, random, datetime, json
     parámetros
       - nombre: nombre
         en: body
-        descripción: Nombre completo (entre 5 y 50 caracteres, sin números).
+        descripción: Nombre completo (entre 10 y 50 caracteres, sin números).
         requerido: true
         tipo: string
 
@@ -53,8 +53,8 @@ def register(request):
         correo = request.data['correo']
         password = request.data['password']
 
-        if len(nombre) < 5 or len(nombre) > 50:
-            return http_400_bad_request('Por favor, ingrese un nombre válido con longitud de 5 a 50 caracteres')
+        if len(nombre) < 10 or len(nombre) > 50:
+            return http_400_bad_request('Por favor, ingrese un nombre válido con longitud de 10 a 50 caracteres')
         elif any(caracter.isdigit() for caracter in nombre):
             return http_400_bad_request('Por favor, evite incluir números en el nombre')
 
@@ -623,7 +623,7 @@ def editUser(request):
 
 @swagger_auto_schema(
     method = 'GET',
-    operation_summary = 'Obtener preguntas por nivel',
+    operation_summary = 'Obtener preguntas por id',
     responses = {
         200: 'Éxito. Devuelve las preguntas del nivel especificado.',
         400: 'Error en la solicitud. Se proporciona un mensaje descriptivo del error.',
@@ -631,23 +631,23 @@ def editUser(request):
         500: 'Error interno del servidor.'
     },
     operation_description = 
-    """
-    Este endpoint permite a los usuarios autenticados obtener las preguntas disponibles para un nivel específico.
+        """
+    Este endpoint permite a los usuarios autenticados obtener una pregunta específica mediante su ID.
     
     ---
     parametros:
-    - nombre: Authorization
-        en: header
-        descripción: Token de autenticación del usuario.
-        requerido: true
-        tipo: string
-        format: JWT
+    - nombre: id
+      en: path
+      descripción: ID de la pregunta que se desea obtener.
+      requerido: true
+      tipo: integer
 
-    - nombre: nivel
-        en: body
-        descripción: El nombre del nivel del cual se desean obtener las preguntas.
-        requerido: true
-        tipo: string
+    - nombre: Authorization
+      en: header
+      descripción: Token de autenticación del usuario.
+      requerido: true
+      tipo: string
+      format: JWT
     """
 )
 @swagger_auto_schema(
@@ -665,32 +665,32 @@ def editUser(request):
 
     ---
     parametros:
-    - nombre: Authorization
-        en: header
-        descripción: Token de autenticación del usuario.
-        requerido: true
-        tipo: string
-        format: JWT
+    - nombre: id
+      en: path
+      descripción: ID de la pregunta que se ha completado.
+      requerido: true
+      tipo: integer
 
-    - nombre: nivel
-        en: body
-        descripción: El nombre del nivel en el que se completaron las preguntas.
-        requerido: true
-        tipo: string
-        
+    - nombre: Authorization
+      en: header
+      descripción: Token de autenticación del usuario.
+      requerido: true
+      tipo: string
+      format: JWT
+      
     - nombre: intentos
-        en: body
-        descripción: El número de intentos realizados para completar las preguntas.
-        requerido: true
-        tipo: string
+      en: body
+      descripción: El número de intentos realizados para completar las preguntas.
+      requerido: true
+      tipo: string
     """
 )
 @decorators.api_view(['GET', 'POST'])
 @decorators.permission_classes([permissions.IsAuthenticated])
-def questions(request):
+def questions(request, id):
     if request.method == 'GET':
         try:
-            niveles = Nivel.objects.get(nombre = request.data['nivel'], estado = True)
+            niveles = Nivel.objects.get(id = id, estado = True)
             serializer = PreguntaSerializer(Pregunta.objects.filter(nivel = niveles, estado = True), many = True)
             return response.Response({
                 'estado': 200,
@@ -709,9 +709,9 @@ def questions(request):
             token = request.headers.get('Authorization').split()[1]
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms = ["HS256"])
             usuario = Usuario.objects.get(id = payload['user_id'])
-            nombreNivel = request.data['nivel']
             intentos = request.data['intentos']
-            nivel = Nivel.objects.get(nombre = nombreNivel, estado = True)
+            nivel = Nivel.objects.get(id = id, estado = True)
+            nombreNivel = nivel.nombre
             progreso = Progreso.objects.get(usuario = usuario, lenguaje = nivel.lenguaje)
             dias = {
                 'Monday': 'Lunes',

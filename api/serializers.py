@@ -29,7 +29,7 @@ class LenguajeSerializer(serializers.ModelSerializer):
 class NivelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Nivel
-        fields = ['nombre', 'explanation']
+        fields = ['id', 'nombre', 'explanation']
 
 class PreguntaSerializer(serializers.ModelSerializer):
     nivel = serializers.SerializerMethodField()
