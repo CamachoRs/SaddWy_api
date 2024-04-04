@@ -5,7 +5,7 @@ from rest_framework import serializers
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ['foto', 'nombre', 'correo', 'password', 'racha', 'registro']
+        fields = ['foto', 'nombre', 'correo', 'password', 'racha', 'registro', 'administrador']
 
 class ProgresoSerializer(serializers.ModelSerializer):
     lenguajeLogo = serializers.SerializerMethodField()
@@ -24,7 +24,7 @@ class ProgresoSerializer(serializers.ModelSerializer):
 class LenguajeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lenguaje
-        fields = ['logo', 'urlDocumentation', 'colorHexadecimal', 'nombre']
+        fields = ['logo', 'urlDocumentation', 'color', 'nombre']
 
 class NivelSerializer(serializers.ModelSerializer):
     class Meta:
@@ -61,4 +61,35 @@ class CartaSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Lenguaje
-        fields = ['logo', 'urlDocumentation', 'colorHexadecimal', 'nombre', 'niveles']
+        fields = ['logo', 'urlDocumentation', 'color', 'nombre', 'niveles']
+    
+
+class UsuarioSerializerAdmin(serializers.ModelSerializer):
+    class Meta:
+        model = Usuario
+        fields = '__all__'
+
+class LenguajeSerializerAdmin(serializers.ModelSerializer):
+    class Meta:
+        model = Lenguaje
+        fields = '__all__'
+
+class NivelSerializerAdmin(serializers.ModelSerializer):
+    class Meta:
+        model = Nivel
+        fields = '__all__'
+
+class PreguntaSerializerAdmin(serializers.ModelSerializer):
+    class Meta:
+        model = Pregunta
+        fields = '__all__'
+
+class ProgresoSerializerAdmin(serializers.ModelSerializer):
+    class Meta:
+        model = Progreso
+        fields = '__all__'
+
+class FotoSerializerAdmin(serializers.ModelSerializer):
+    class Meta:
+        model = FotoPredeterminada
+        fields = '__all__'

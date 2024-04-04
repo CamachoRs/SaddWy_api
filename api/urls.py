@@ -1,6 +1,9 @@
-from rest_framework_simplejwt.views import TokenRefreshView
+from django.conf.urls.static import static
+from django.conf import settings
+from rest_framework import routers
 from drf_yasg import views, openapi
-from django.urls import path
+from rest_framework_simplejwt.views import TokenRefreshView
+from django.urls import path, include
 from .views import *
 
 schema_view = views.get_schema_view(
@@ -12,6 +15,14 @@ schema_view = views.get_schema_view(
         license = openapi.License(name = 'Licencia propietaria')
     ), public = True
 )
+
+router = routers.DefaultRouter()
+router.register('users', UsuarioView)
+router.register('languages', LenguajeView)
+router.register('Levels', NivelView)
+router.register('Questions', PreguntaView)
+router.register('Progress', ProgresoView)
+router.register('Photos', FotoView)
 
 urlpatterns = [
     path('v01/register/', register),
@@ -27,4 +38,5 @@ urlpatterns = [
     path('v01/refresh/', TokenRefreshView.as_view()),
     path('v01/documentation/swagger/', schema_view.with_ui('swagger', cache_timeout = 0)),
     path('v01/documentation/redoc/', schema_view.with_ui('redoc', cache_timeout = 0)),
-]
+    path('v01/admin/', include(router.urls))
+] + static(f'v01{settings.MEDIA_URL}', document_root = settings.MEDIA_ROOT)

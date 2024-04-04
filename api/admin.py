@@ -9,7 +9,7 @@ class UsuarioAdmin(admin.ModelAdmin):
     list_display = ['id', 'foto', 'nombre', 'correo', 'password', 'racha', 'estado', 'registro', 'administrador']
 
 class LenguajeAdmin(admin.ModelAdmin):
-    list_display = ['id', 'logo', 'urlDocumentation', 'colorHexadecimal', 'nombre', 'estado', 'registro']
+    list_display = ['id', 'logo', 'urlDocumentation', 'color', 'nombre', 'estado', 'registro']
 
 class NivelAdmin(admin.ModelAdmin):
     list_display = ['id', 'lenguaje', 'nombre', 'explanation', 'totalPreguntas', 'estado', 'registro']
