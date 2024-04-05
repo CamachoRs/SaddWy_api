@@ -8,7 +8,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.core import validators, exceptions, mail
 from django.db.models import Sum, Min
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import permissions, response, status, decorators
+from rest_framework import permissions, response, status, decorators, viewsets
 from rest_framework_simplejwt import tokens, exceptions as TokenError
 import difflib, re, jwt, imghdr, base64, io, random, datetime, json
 
@@ -29,7 +29,7 @@ import difflib, re, jwt, imghdr, base64, io, random, datetime, json
     parámetros
       - nombre: nombre
         en: body
-        descripción: Nombre completo (entre 10 y 50 caracteres, sin números).
+        descripción: Nombre completo (entre 10 y 30 caracteres, sin números).
         requerido: true
         tipo: string
 
@@ -41,7 +41,7 @@ import difflib, re, jwt, imghdr, base64, io, random, datetime, json
 
       - nombre: password
         en: body
-        descripción: Contraseña del usuario (entre 8 y 12 caracteres, sin espacios, con al menos un carácter especial y sin similitud con el nombre o correo).
+        descripción: Contraseña del usuario (al menos 8 caracteres, sin espacios, con al menos un carácter especial y sin similitud con el nombre o correo).
         requerido: true
         tipo: string
     """
@@ -53,8 +53,8 @@ def register(request):
         correo = request.data['correo']
         password = request.data['password']
 
-        if len(nombre) < 10 or len(nombre) > 50:
-            return http_400_bad_request('Por favor, ingrese un nombre válido con longitud de 10 a 50 caracteres')
+        if len(nombre) < 10 or len(nombre) > 30:
+            return http_400_bad_request('Por favor, ingrese un nombre válido con longitud de 10 a 30 caracteres')
         elif any(caracter.isdigit() for caracter in nombre):
             return http_400_bad_request('Por favor, evite incluir números en el nombre')
 
@@ -70,12 +70,10 @@ def register(request):
         else:
             validators.validate_email(correo)
 
-        if not password:
-            return http_400_bad_request('Por favor, asegúrate de ingresar tu contraseña. Este campo no puede estar vacío')
+        if len(password) < 8:
+            return http_400_bad_request('Por favor, ingresa una contraseña con un mínimo de 8 caracteres')
         elif ' ' in password:
             return http_400_bad_request('Por favor, asegurate que tu contraseña no contenga espacios')
-        elif len(password) < 8 or len(password) > 12:
-            return http_400_bad_request('Por favor, ingresa una contraseña con un mínimo de 8 caracteres y un máximo de 12 caracteres')
         else:
             patron = r'[!@#$%^&*()\-_=+{};:,<.>/?[\]\'"`~\\|]'
             similitud_1 = difflib.SequenceMatcher(None, nombre.lower(), password.lower()).ratio()
@@ -95,9 +93,9 @@ def register(request):
             usuario = serializer.save()
             token = tokens.RefreshToken.for_user(usuario)
             mensaje = f"""
-                Estimado {usuario.nombre},
+                Estimada/o {usuario.nombre},
 
-                ¡Bienvenido a nuestro portal de programación! Estamos encantados de que te hayas registrado con nosotros.
+                Bienvenida/o a nuestro portal de programación! Estamos encantados de que te hayas registrado con nosotros.
 
                 Para completar el proceso de registro y validar tu cuenta, por favor haz clic en el siguiente enlace:
 
@@ -173,17 +171,20 @@ def login(request):
         if not password:
             return http_400_bad_request('Por favor, asegúrate de ingresar tu contraseña. Este campo no puede estar vacío')
 
-        usuario = Usuario.objects.get(correo = correo, estado = True)
+        usuario = Usuario.objects.get(correo = correo)
+        if not usuario.estado:
+            return http_400_bad_request('¡Hola! Parece que aún no has validado tu cuenta. Por favor, verifica tu correo electrónico y sigue el enlace de validación para acceder a todas las funciones de nuestra plataforma')
 
         if not check_password(password, usuario.password):
             return http_400_bad_request('Lo siento, el correo y/o contraseña ingresados son incorrectos. Por favor, inténtalo nuevamente')
 
         usuarioSerializer = UsuarioSerializer(usuario)
         token = tokens.RefreshToken.for_user(usuario) 
-        for lenguaje in Lenguaje.objects.filter(estado = True):
-            if not Progreso.objects.filter(usuario = usuario, lenguaje = lenguaje).exists():
-                nivelesPermitidos = {nivel.nombre: (indice == 0) for indice, nivel in enumerate(Nivel.objects.filter(lenguaje = lenguaje))}
-                Progreso.objects.create(usuario = usuario, lenguaje = lenguaje, nivelesPermitidos = nivelesPermitidos)
+        if not usuario.administrador:
+            for lenguaje in Lenguaje.objects.filter(estado = True):
+                if not Progreso.objects.filter(usuario = usuario, lenguaje = lenguaje).exists():
+                    nivelesPermitidos = {nivel.nombre: (indice == 0) for indice, nivel in enumerate(Nivel.objects.filter(lenguaje = lenguaje))}
+                    Progreso.objects.create(usuario = usuario, lenguaje = lenguaje, nivelesPermitidos = nivelesPermitidos)
 
         return response.Response({
             'estado': 200,
@@ -193,7 +194,8 @@ def login(request):
                 'foto': settings.BASE_URL + usuarioSerializer.data['foto'],
                 'nombre': usuarioSerializer.data['nombre'],
                 'acceso': str(token.access_token),
-                'actualizar': str(token)
+                'actualizar': str(token),
+                'administrador': usuarioSerializer.data['administrador']
             }
         }, status = status.HTTP_200_OK)
     except KeyError:
@@ -540,13 +542,13 @@ def ranking(request):
 
     - nombre: nombre
         en: body
-        descripción: Nuevo nombre completo (entre 5 y 50 caracteres, sin números).
+        descripción: Nuevo nombre (entre 10 y 30 caracteres, sin números).
         requerido: false
         tipo: string
 
     - nombre: password
         en: body
-        descripción: Nueva contraseña del usuario (entre 8 y 12 caracteres, sin espacios, con al menos un carácter especial y sin similitud con el nombre o correo).
+        descripción: Contraseña del usuario (de 8 caracteres, sin espacios, con al menos un carácter especial y sin similitud con el nombre o correo).
         requerido: false
         tipo: string
     """
@@ -572,8 +574,8 @@ def editUser(request):
             request.data['foto'] = usuario.foto
 
         if nombre:
-            if len(nombre) < 5 or len(nombre) > 50:
-                return http_400_bad_request('Por favor, ingrese un nombre válido con longitud de 5 a 50 caracteres')
+            if len(nombre) < 10 or len(nombre) > 30:
+                return http_400_bad_request('Por favor, ingrese un nombre válido con longitud de 10 a 30 caracteres')
             elif any(caracter.isdigit() for caracter in nombre):
                 return http_400_bad_request('Por favor, evite incluir números en el nombre')
             request.data['nombre'] = nombre
@@ -581,10 +583,10 @@ def editUser(request):
             request.data['nombre'] = usuario.nombre
 
         if password:
-            if ' ' in password:
+            if len(password) < 8:
+                return http_400_bad_request('Por favor, ingresa una contraseña con un mínimo de 8 caracteres')
+            elif ' ' in password:
                 return http_400_bad_request('Por favor, asegurate que tu contraseña no contenga espacios')
-            elif len(password) < 8 or len(password) > 12:
-                return http_400_bad_request('Por favor, ingresa una contraseña con un mínimo de 8 caracteres y un máximo de 12 caracteres')
             else:
                 patron = r'[!@#$%^&*()\-_=+{};:,<.>/?[\]\'"`~\\|]'
                 similitud_1 = difflib.SequenceMatcher(None, nombre.lower(), password.lower()).ratio()
@@ -781,3 +783,33 @@ def http_500_internal_server_error(mensaje):
         'validar': False,
         'mensaje': mensaje
     }, status = status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class UsuarioView(viewsets.ModelViewSet):
+    queryset = Usuario.objects.all()
+    serializer_class = UsuarioSerializerAdmin
+    permission_classes = [permissions.IsAuthenticated]
+
+class LenguajeView(viewsets.ModelViewSet):
+    queryset = Lenguaje.objects.all()
+    serializer_class = LenguajeSerializerAdmin
+    permission_classes = [permissions.IsAuthenticated]
+
+class NivelView(viewsets.ModelViewSet):
+    queryset = Nivel.objects.all()
+    serializer_class = NivelSerializerAdmin
+    permission_classes = [permissions.IsAuthenticated]
+
+class PreguntaView(viewsets.ModelViewSet):
+    queryset = Pregunta.objects.all()
+    serializer_class = PreguntaSerializerAdmin
+    permission_classes = [permissions.IsAuthenticated]
+
+class ProgresoView(viewsets.ModelViewSet):
+    queryset = Progreso.objects.all()
+    serializer_class = ProgresoSerializerAdmin
+    permission_classes = [permissions.IsAuthenticated]
+
+class FotoView(viewsets.ModelViewSet):
+    queryset = FotoPredeterminada.objects.all()
+    serializer_class = FotoSerializerAdmin
+    permission_classes = [permissions.IsAuthenticated]

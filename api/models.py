@@ -55,7 +55,7 @@ class Usuario(AbstractBaseUser):
 class Lenguaje(models.Model):
     logo = models.ImageField(upload_to = 'lenguaje/')
     urlDocumentation = models.URLField(max_length = 2083)
-    colorHexadecimal = models.CharField(max_length = 7)
+    color = models.JSONField()
     nombre = models.CharField(max_length = 50, unique = True)
     estado = models.BooleanField(default = False)
     registro = models.DateField(auto_now_add = True)
