@@ -41,7 +41,7 @@ import difflib, re, jwt, imghdr, base64, io, random, datetime, json
 
       - nombre: password
         en: body
-        descripción: Contraseña del usuario (al menos 8 caracteres, al menos un carácter especial, al menos una letra mayúscula, al menos una letra minúscula, sin espacios y sin similitud con el nombre o correo).
+        descripción: Contraseña del usuario (al menos 8 caracteres, al menos un carácter especial, al menos una letra mayúscula, al menos una letra minúscula, al menos un número, sin espacios y sin similitud con el nombre o correo).
         requerido: true
         tipo: string
     """
@@ -328,7 +328,7 @@ def recoveryEmail(request):
     parametros
       - nombre: password
         en: body
-        descripción: Nueva contraseña para la cuenta del usuario (al menos 8 caracteres, al menos un carácter especial, al menos una letra mayúscula, al menos una letra minúscula, sin espacios y sin similitud con el nombre o correo).
+        descripción: Nueva contraseña para la cuenta del usuario (al menos 8 caracteres, al menos un carácter especial, al menos una letra mayúscula, al menos una letra minúscula, al menos un número, sin espacios y sin similitud con el nombre o correo).
         requerido: true
         tipo: string
     """
@@ -558,7 +558,7 @@ def ranking(request):
 
     - nombre: password
         en: body
-        descripción: Contraseña del usuario (al menos 8 caracteres, al menos un carácter especial, al menos una letra mayúscula, al menos una letra minúscula, sin espacios y sin similitud con el nombre o correo).
+        descripción: Contraseña del usuario (al menos 8 caracteres, al menos un carácter especial, al menos una letra mayúscula, al menos una letra minúscula, al menos un número, sin espacios y sin similitud con el nombre o correo).
         requerido: false
         tipo: string
     """
