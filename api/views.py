@@ -41,7 +41,7 @@ import difflib, re, jwt, imghdr, base64, io, random, datetime, json
 
       - nombre: password
         en: body
-        descripción: Contraseña del usuario (al menos 8 caracteres, sin espacios, con al menos un carácter especial y sin similitud con el nombre o correo).
+        descripción: Contraseña del usuario (al menos 8 caracteres, al menos un carácter especial, al menos una letra mayúscula, al menos una letra minúscula, sin espacios y sin similitud con el nombre o correo).
         requerido: true
         tipo: string
     """
@@ -74,6 +74,12 @@ def register(request):
             return http_400_bad_request('Por favor, ingresa una contraseña con un mínimo de 8 caracteres')
         elif ' ' in password:
             return http_400_bad_request('Por favor, asegurate que tu contraseña no contenga espacios')
+        elif not re.search(r'[A-Z]', password):
+            return http_400_bad_request('Por favor, asegúrate de incluir al menos una letra mayúscula en tu contraseña')
+        elif not re.search(r'[a-z]', password):
+            return http_400_bad_request('Por favor, asegúrate de incluir al menos una letra minúscula en tu contraseña')
+        elif not re.search(r'\d', password):
+            return http_400_bad_request('Por favor, asegúrate de incluir al menos un número en tu contraseña')
         else:
             patron = r'[!@#$%^&*()\-_=+{};:,<.>/?[\]\'"`~\\|]'
             similitud_1 = difflib.SequenceMatcher(None, nombre.lower(), password.lower()).ratio()
@@ -191,7 +197,7 @@ def login(request):
             'validar': True,
             'mensaje': '¡Inicio de sesión exitoso!',
             'dato': {
-                'foto': usuarioSerializer.data['foto'],
+                'foto': settings.BASE_URL + usuarioSerializer.data['foto'],
                 'nombre': usuarioSerializer.data['nombre'],
                 'acceso': str(token.access_token),
                 'actualizar': str(token),
@@ -322,7 +328,7 @@ def recoveryEmail(request):
     parametros
       - nombre: password
         en: body
-        descripción: Nueva contraseña para la cuenta del usuario (entre 8 y 12 caracteres, sin espacios, con al menos un carácter especial y sin similitud con el nombre o correo del usuario).
+        descripción: Nueva contraseña para la cuenta del usuario (al menos 8 caracteres, al menos un carácter especial, al menos una letra mayúscula, al menos una letra minúscula, sin espacios y sin similitud con el nombre o correo).
         requerido: true
         tipo: string
     """
@@ -334,12 +340,16 @@ def recoverAccount(request, token):
         password = request.data['password']
         usuario = Usuario.objects.get(id = id.payload['user_id'], estado = True)
         
-        if not password:
-            return http_400_bad_request('Por favor, asegúrate de ingresar tu contraseña. Este campo no puede estar vacío')
+        if len(password) < 8:
+            return http_400_bad_request('Por favor, ingresa una contraseña con un mínimo de 8 caracteres')
         elif ' ' in password:
             return http_400_bad_request('Por favor, asegurate que tu contraseña no contenga espacios')
-        elif len(password) < 8 or len(password) > 12:
-            return http_400_bad_request('Por favor, ingresa una contraseña con un mínimo de 8 caracteres y un máximo de 12 caracteres')
+        elif not re.search(r'[A-Z]', password):
+            return http_400_bad_request('Por favor, asegúrate de incluir al menos una letra mayúscula en tu contraseña')
+        elif not re.search(r'[a-z]', password):
+            return http_400_bad_request('Por favor, asegúrate de incluir al menos una letra minúscula en tu contraseña')
+        elif not re.search(r'\d', password):
+            return http_400_bad_request('Por favor, asegúrate de incluir al menos un número en tu contraseña')
         else:
             patron = r'[!@#$%^&*()\-_=+{};:,<.>/?[\]\'"`~\\|]'
             similitud1 = difflib.SequenceMatcher(None, usuario.nombre.lower(), password.lower()).ratio()
@@ -400,7 +410,7 @@ def profile(request):
             'mensaje': '',
             'dato': {
                 'usuario': {
-                    'foto': usuarioSerializer.data['foto'],
+                    'foto': settings.BASE_URL + usuarioSerializer.data['foto'],
                     'nombre': usuarioSerializer.data['nombre'],
                     'correo': usuarioSerializer.data['correo'],
                     'racha': usuarioSerializer.data['racha'],
@@ -548,7 +558,7 @@ def ranking(request):
 
     - nombre: password
         en: body
-        descripción: Contraseña del usuario (de 8 caracteres, sin espacios, con al menos un carácter especial y sin similitud con el nombre o correo).
+        descripción: Contraseña del usuario (al menos 8 caracteres, al menos un carácter especial, al menos una letra mayúscula, al menos una letra minúscula, sin espacios y sin similitud con el nombre o correo).
         requerido: false
         tipo: string
     """
@@ -587,6 +597,12 @@ def editUser(request):
                 return http_400_bad_request('Por favor, ingresa una contraseña con un mínimo de 8 caracteres')
             elif ' ' in password:
                 return http_400_bad_request('Por favor, asegurate que tu contraseña no contenga espacios')
+            elif not re.search(r'[A-Z]', password):
+                return http_400_bad_request('Por favor, asegúrate de incluir al menos una letra mayúscula en tu contraseña')
+            elif not re.search(r'[a-z]', password):
+                return http_400_bad_request('Por favor, asegúrate de incluir al menos una letra minúscula en tu contraseña')
+            elif not re.search(r'\d', password):
+                return http_400_bad_request('Por favor, asegúrate de incluir al menos un número en tu contraseña')
             else:
                 patron = r'[!@#$%^&*()\-_=+{};:,<.>/?[\]\'"`~\\|]'
                 similitud_1 = difflib.SequenceMatcher(None, nombre.lower(), password.lower()).ratio()
@@ -609,7 +625,7 @@ def editUser(request):
                 'validar': True,
                 'mensaje': '¡Información actualizada exitosamente!',
                 'dato': {
-                    'foto': usuarioSerializer.data['foto'],
+                    'foto': settings.BASE_URL + usuarioSerializer.data['foto'],
                     'nombre': usuarioSerializer.data['nombre'],
                     'correo': usuarioSerializer.data['correo'],
                 }

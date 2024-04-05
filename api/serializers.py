@@ -62,3 +62,33 @@ class CartaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lenguaje
         fields = ['logo', 'urlDocumentation', 'color', 'nombre', 'niveles']
+    
+class UsuarioSerializerAdmin(serializers.ModelSerializer):
+    class Meta:
+        model = Usuario
+        fields = '__all__'
+
+class LenguajeSerializerAdmin(serializers.ModelSerializer):
+    class Meta:
+        model = Lenguaje
+        fields = '__all__'
+
+class NivelSerializerAdmin(serializers.ModelSerializer):
+    class Meta:
+        model = Nivel
+        fields = '__all__'
+
+class PreguntaSerializerAdmin(serializers.ModelSerializer):
+    class Meta:
+        model = Pregunta
+        fields = '__all__'
+
+class ProgresoSerializerAdmin(serializers.ModelSerializer):
+    class Meta:
+        model = Progreso
+        fields = '__all__'
+
+class FotoSerializerAdmin(serializers.ModelSerializer):
+    class Meta:
+        model = FotoPredeterminada
+        fields = '__all__'

@@ -35,5 +35,5 @@ urlpatterns = [
     path('v01/refresh/', TokenRefreshView.as_view()),
     path('v01/documentation/swagger/', schema_view.with_ui('swagger', cache_timeout = 0)),
     path('v01/documentation/redoc/', schema_view.with_ui('redoc', cache_timeout = 0)),
-        path('v01/admin/', include(router.urls))
+    path('v01/admin/', include(router.urls))
 ]
