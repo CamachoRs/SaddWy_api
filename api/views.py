@@ -41,7 +41,7 @@ import difflib, re, jwt, imghdr, base64, io, random, datetime, json
 
       - nombre: password
         en: body
-        descripción: Contraseña del usuario (de 8 caracteres, sin espacios, con al menos un carácter especial y sin similitud con el nombre o correo).
+        descripción: Contraseña del usuario (al menos 8 caracteres, sin espacios, con al menos un carácter especial y sin similitud con el nombre o correo).
         requerido: true
         tipo: string
     """
@@ -95,7 +95,7 @@ def register(request):
             mensaje = f"""
                 Estimada/o {usuario.nombre},
 
-                ¡Bienvenida/o a nuestro portal de programación! Estamos encantados de que te hayas registrado con nosotros.
+                ¡Bienvenido/a a nuestro portal de programación! Estamos encantados de que te hayas registrado con nosotros.
 
                 Para completar el proceso de registro y validar tu cuenta, por favor haz clic en el siguiente enlace:
 
@@ -542,13 +542,13 @@ def ranking(request):
 
     - nombre: nombre
         en: body
-        descripción: Nuevo nombre completo (entre 5 y 50 caracteres, sin números).
+        descripción: Nuevo nombre (entre 10 y 30 caracteres, sin números).
         requerido: false
         tipo: string
 
     - nombre: password
         en: body
-        descripción: Nueva contraseña del usuario (entre 8 y 12 caracteres, sin espacios, con al menos un carácter especial y sin similitud con el nombre o correo).
+        descripción: Contraseña del usuario (de 8 caracteres, sin espacios, con al menos un carácter especial y sin similitud con el nombre o correo).
         requerido: false
         tipo: string
     """
@@ -574,8 +574,8 @@ def editUser(request):
             request.data['foto'] = usuario.foto
 
         if nombre:
-            if len(nombre) < 5 or len(nombre) > 50:
-                return http_400_bad_request('Por favor, ingrese un nombre válido con longitud de 5 a 50 caracteres')
+            if len(nombre) < 10 or len(nombre) > 30:
+                return http_400_bad_request('Por favor, ingrese un nombre válido con longitud de 10 a 30 caracteres')
             elif any(caracter.isdigit() for caracter in nombre):
                 return http_400_bad_request('Por favor, evite incluir números en el nombre')
             request.data['nombre'] = nombre
@@ -583,10 +583,10 @@ def editUser(request):
             request.data['nombre'] = usuario.nombre
 
         if password:
-            if ' ' in password:
+            if len(password) < 8:
+                return http_400_bad_request('Por favor, ingresa una contraseña con un mínimo de 8 caracteres')
+            elif ' ' in password:
                 return http_400_bad_request('Por favor, asegurate que tu contraseña no contenga espacios')
-            elif len(password) < 8 or len(password) > 12:
-                return http_400_bad_request('Por favor, ingresa una contraseña con un mínimo de 8 caracteres y un máximo de 12 caracteres')
             else:
                 patron = r'[!@#$%^&*()\-_=+{};:,<.>/?[\]\'"`~\\|]'
                 similitud_1 = difflib.SequenceMatcher(None, nombre.lower(), password.lower()).ratio()
