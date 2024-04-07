@@ -74,19 +74,38 @@ class LenguajeSerializerAdmin(serializers.ModelSerializer):
         fields = '__all__'
 
 class NivelSerializerAdmin(serializers.ModelSerializer):
+    lenguajeNombre = serializers.SerializerMethodField()
+    
+    def get_lenguajeNombre(self, obj):
+        return obj.lenguaje.nombre
+
     class Meta:
         model = Nivel
-        fields = '__all__'
+        fields = ['id', 'nombre', 'explanation', 'totalPreguntas', 'estado', 'registro', 'lenguaje', 'lenguajeNombre']
 
 class PreguntaSerializerAdmin(serializers.ModelSerializer):
+    nivelNombre = serializers.SerializerMethodField()
+    
+    def get_nivelNombre(self, obj):
+        return obj.nivel.nombre
+    
     class Meta:
         model = Pregunta
-        fields = '__all__'
+        fields = ['id', 'explanation', 'pregunta', 'respuesta', 'estado', 'registro', 'nivel', 'nivelNombre']
 
 class ProgresoSerializerAdmin(serializers.ModelSerializer):
+    usuarioNombre = serializers.SerializerMethodField()
+    lenguajeNombre = serializers.SerializerMethodField()
+
+    def get_usuarioNombre(self, obj):
+        return obj.usuario.nombre
+    
+    def get_lenguajeNombre(self, obj):
+        return obj.lenguaje.nombre
+
     class Meta:
         model = Progreso
-        fields = '__all__'
+        fields = ['id', 'usuario', 'usuarioNombre', 'lenguaje', 'lenguajeNombre', 'progresoLenguaje', 'puntos', 'nivelesPermitidos', 'registro']
 
 class FotoSerializerAdmin(serializers.ModelSerializer):
     class Meta:

@@ -105,7 +105,7 @@ def register(request):
 
                 Para completar el proceso de registro y validar tu cuenta, por favor haz clic en el siguiente enlace:
 
-                {settings.BASE_URL}/api/v01/validate/{token}/
+                http://localhost:4200/login/{token}
 
                 Este enlace te llevará a una página donde podrás confirmar tu dirección de correo electrónico y activar tu cuenta.
 
@@ -280,7 +280,7 @@ def recoveryEmail(request):
 
             Por favor, haz clic en el siguiente enlace para restablecer tu contraseña. Este enlace será válido por 24 horas, así que asegúrate de usarlo antes de que expire:
 
-            {settings.BASE_URL}/api/v01/recover/{token}/
+            http://localhost:4200/confirmarPassword/{token}/
 
             Si tienes algún problema, no dudes en ponerte en contacto con nuestro equipo de soporte.
 
@@ -805,10 +805,34 @@ class UsuarioView(viewsets.ModelViewSet):
     serializer_class = UsuarioSerializerAdmin
     permission_classes = [permissions.IsAuthenticated]
 
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data = request.data, partial = True)
+        serializer.is_valid(raise_exception = True)
+        self.perform_update(serializer)
+        return response.Response({
+            'estado': 200,
+            'validar': True,
+            'mensaje': '¡Información actualizada exitosamente!',
+            'dato': serializer.data
+        }, status = status.HTTP_200_OK)
+
 class LenguajeView(viewsets.ModelViewSet):
     queryset = Lenguaje.objects.all()
     serializer_class = LenguajeSerializerAdmin
     permission_classes = [permissions.IsAuthenticated]
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data = request.data, partial = True)
+        serializer.is_valid(raise_exception = True)
+        self.perform_update(serializer)
+        return response.Response({
+            'estado': 200,
+            'validar': True,
+            'mensaje': '¡Información actualizada exitosamente!',
+            'dato': serializer.data
+        }, status = status.HTTP_200_OK)
 
 class NivelView(viewsets.ModelViewSet):
     queryset = Nivel.objects.all()

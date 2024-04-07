@@ -16,10 +16,10 @@ schema_view = views.get_schema_view(
 router = DefaultRouter()
 router.register('users', UsuarioView)
 router.register('languages', LenguajeView)
-router.register('Levels', NivelView)
-router.register('Questions', PreguntaView)
-router.register('Progress', ProgresoView)
-router.register('Photos', FotoView)
+router.register('levels', NivelView)
+router.register('questions', PreguntaView)
+router.register('progress', ProgresoView)
+router.register('photos', FotoView)
 
 urlpatterns = [
     path('v01/register/', register),
