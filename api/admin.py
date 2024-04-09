@@ -20,9 +20,13 @@ class PreguntaAdmin(admin.ModelAdmin):
 class ProgresoAdmin(admin.ModelAdmin):
     list_display = ['id', 'usuario', 'lenguaje', 'progresoLenguaje', 'puntos', 'nivelesPermitidos', 'registro']
 
+class ContactarAdmin(admin.ModelAdmin):
+    list_display = ['id', 'nombre', 'celular', 'correo', 'mensaje', 'registro']
+
 admin.site.register(FotoPredeterminada, FotoPredeterminadaAdmin)
 admin.site.register(Usuario, UsuarioAdmin)
 admin.site.register(Lenguaje, LenguajeAdmin)
 admin.site.register(Nivel, NivelAdmin)
 admin.site.register(Pregunta, PreguntaAdmin)
 admin.site.register(Progreso, ProgresoAdmin)
+admin.site.register(Contactar, ContactarAdmin)

@@ -62,7 +62,7 @@ class Lenguaje(models.Model):
 
 class Nivel(models.Model):
     lenguaje = models.ForeignKey(Lenguaje, on_delete = models.CASCADE, limit_choices_to = {'estado': True})
-    nombre = models.CharField(max_length = 50, unique = True)
+    nombre = models.CharField(max_length = 50)
     explanation = models.TextField()
     totalPreguntas = models.PositiveIntegerField(default = 0)
     estado = models.BooleanField(default = False)
@@ -86,4 +86,11 @@ class Progreso(models.Model):
     
 class FotoPredeterminada(models.Model):
     foto = models.ImageField(upload_to = 'predeterminado/')
+    registro = models.DateTimeField(auto_now_add = True)
+
+class Contactar(models.Model):
+    nombre = models.CharField(max_length = 50)
+    celular = models.CharField(max_length = 10)
+    correo = models.EmailField()
+    mensaje = models.TextField()
     registro = models.DateTimeField(auto_now_add = True)

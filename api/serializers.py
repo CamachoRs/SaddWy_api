@@ -63,6 +63,11 @@ class CartaSerializer(serializers.ModelSerializer):
         model = Lenguaje
         fields = ['logo', 'urlDocumentation', 'color', 'nombre', 'niveles']
     
+class ContactarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contactar
+        fields = '__all__'
+
 class UsuarioSerializerAdmin(serializers.ModelSerializer):
     class Meta:
         model = Usuario

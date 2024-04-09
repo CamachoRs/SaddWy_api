@@ -30,6 +30,7 @@ urlpatterns = [
     path('v01/edit/', editUser),
     path('v01/questions/<int:id>/', questions),
     path('v01/profile/', profile),
+    path('v01/ContactUs/', ContactUs),
     path('v01/recovery/', recoveryEmail),
     path('v01/recover/<str:token>/', recoverAccount),
     path('v01/refresh/', TokenRefreshView.as_view()),

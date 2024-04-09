@@ -493,7 +493,7 @@ def ranking(request):
         progresos = Progreso.objects.values('usuario').annotate(
             puntos = Sum('puntos'), 
             registro = Min('registro')
-        ).order_by('-puntos', 'registro')
+        ).order_by('-puntos', 'registro')[:50]
         listado = {}
         for i, resultado in enumerate(progresos, start = 1):
             listado[i] = {
@@ -570,27 +570,21 @@ def editUser(request):
         token = request.headers.get('Authorization').split()[1]
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms = ["HS256"])
         usuario = Usuario.objects.get(id = payload['user_id'])
-        foto = base64.b64decode(request.data['foto'])
-        nombre = request.data['nombre']
-        password = request.data['password']
+        foto = request.data.get('foto')
+        nombre = request.data.get('nombre')
+        password = request.data.get('password')
         
         if foto:
-            if imghdr.what(io.BytesIO(foto)) not in ['jpeg', 'png']:
+            if imghdr.what(None, h = foto) not in ['jpeg', 'png']:
                 return http_400_bad_request('Por favor, asegúrate de cargar una imagen en formato JPG o PNG para completar el proceso')
             if 'predeterminado' not in usuario.foto.path:
                 usuario.foto.delete()
-            request.data['foto'] = ContentFile(foto, name = f'{slugify(usuario.nombre)}.jpg')
-        else:
-            request.data['foto'] = usuario.foto
 
         if nombre:
             if len(nombre) < 10 or len(nombre) > 30:
                 return http_400_bad_request('Por favor, ingrese un nombre válido con longitud de 10 a 30 caracteres')
             elif any(caracter.isdigit() for caracter in nombre):
                 return http_400_bad_request('Por favor, evite incluir números en el nombre')
-            request.data['nombre'] = nombre
-        else:
-            request.data['nombre'] = usuario.nombre
 
         if password:
             if len(password) < 8:
@@ -612,11 +606,8 @@ def editUser(request):
                 elif similitud_1 > 0.5 and similitud_2 > 0.5:
                     return http_400_bad_request('Por favor, elige una contraseña que no contenga información personal')
             request.data['password'] = make_password(password)
-        else:
-            request.data['password'] = usuario.password
 
-        request.data['correo'] = usuario.correo
-        usuarioSerializer = UsuarioSerializer(instance = usuario, data = request.data)
+        usuarioSerializer = UsuarioSerializer(instance = usuario, data = request.data, partial = True)
         if usuarioSerializer.is_valid():
             usuario.save()
             usuarioSerializer.save()
@@ -749,13 +740,26 @@ def questions(request, id):
                 posicion = listaNiveles.index(nombreNivel)
                 if posicion + 1 < len(listaNiveles):
                     siguienteNivel = listaNiveles[posicion + 1]
-                    nivelesPermitidos[siguienteNivel] = True
-
-            if nivel.totalPreguntas <= intentos:
-                progreso.puntos += nivel.totalPreguntas
-            else:
-                progreso.puntos += (nivel.totalPreguntas - intentos) * 2 + nivel.totalPreguntas
-            
+                    if not nivelesPermitidos[siguienteNivel]:
+                        if nivel.totalPreguntas <= intentos:
+                            progreso.puntos += nivel.totalPreguntas
+                        else:
+                            progreso.puntos += (nivel.totalPreguntas - intentos) * 2 + nivel.totalPreguntas
+                        
+                        nivelesPermitidos[siguienteNivel] = True
+                    else:
+                        return response.Response({
+                            'estado': 200,
+                            'validar': True,
+                            'mensaje': f'¡Felicitaciones! Ya has completado el nivel {siguienteNivel} anteriormente'
+                        })
+                
+                if posicion == len(listaNiveles):
+                    if nivel.totalPreguntas <= intentos:
+                        progreso.puntos += nivel.totalPreguntas
+                    else:
+                        progreso.puntos += (nivel.totalPreguntas - intentos) * 2 + nivel.totalPreguntas
+                    
             num_nivelesPermitidos = sum(valor for valor in progreso.nivelesPermitidos.values() if valor)
             progreso.progresoLenguaje = (num_nivelesPermitidos - 1)*100 / nivel.totalPreguntas
             progreso.save()
@@ -778,6 +782,94 @@ def questions(request, id):
             return http_500_internal_server_error('Lo siento, no pudimos completar la operación de conversión de datos debido a un error interno del sistema. Por favor, comunícate con el equipo técnico para obtener asistencia')
         except Exception as e:
             return http_500_internal_server_error(str(e))
+
+@swagger_auto_schema(
+    method = 'POST',
+    operation_summary = 'Registro de usuarios',
+    responses = {
+        200: 'Éxito. El mensaje ha sido enviado correctamente.',
+        400: 'Error en la solicitud. Se proporciona un mensaje descriptivo del error.',
+        401: 'No autorizado. El usuario no tiene permiso para acceder a este recurso.',
+        500: 'Error interno del servidor.'
+    },
+    operation_description =
+    """
+    Este endpoint permite a los usuarios enviar mensajes de contacto al sistema. Se requiere que el usuario esté autenticado para realizar esta acción.
+
+    ---
+    parámetros:
+      - nombre: nombre
+        en: body
+        descripción: Nombre completo del remitente (entre 10 y 30 caracteres, sin números)
+        requerido: true
+        tipo: string
+
+      - nombre: celular
+        en: body
+        descripción: Número de celular del remitente (debe tener formato Colombiano, iniciando con 3 y teniendo 10 digitos de longitud)
+        requerido: true
+        tipo: string
+
+      - nombre: correo
+        en: body
+        descripción: Correo electrónico del remitente (que sea un correo valido)
+        requerido: true
+        tipo: string
+
+      - nombre: mensaje
+        en: body
+        descripción: Mensaje del remitente (entre 100 y 1000 caracteres)
+        requerido: true
+        tipo: string
+    """
+)
+@decorators.api_view(['POST'])
+@decorators.permission_classes([permissions.IsAuthenticated])
+def ContactUs(request):
+    try:
+        nombre = request.data['nombre']
+        celular = request.data['celular']
+        correo = request.data['correo']
+        mensaje = request.data['mensaje']
+
+        if len(nombre) < 10 or len(nombre) > 30:
+            return http_400_bad_request('Por favor, ingrese un nombre válido con longitud de 10 a 30 caracteres')
+        elif any(caracter.isdigit() for caracter in nombre):
+            return http_400_bad_request('Por favor, evite incluir números en el nombre')
+        
+        if celular[0] != '3' or len(celular) != 10:
+            return http_400_bad_request('El número de celular proporcionado no es válido para Colombia. Por favor, verifica e inténtalo nuevamente.')
+
+        if not correo:
+            return http_400_bad_request('Por favor, asegúrate de ingresar tu correo electrónico. Este campo no puede estar vacío')
+        elif len(correo) > 254:
+            return http_400_bad_request('Por favor, ingrese un correo válido con un máximo de 254 caracteres')
+        else:
+            validators.validate_email(correo)
+        
+        if len(mensaje) < 100:
+            return http_400_bad_request('Por favor, ingrese un mensaje válido con un mínimo de 100 caracteres')
+        elif len(mensaje) > 1000:
+            return http_400_bad_request('Por favor, ingrese un mensaje válido con un máximo de 1000 caracteres')
+        
+        serializer = ContactarSerializer(data = request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return response.Response({
+                'estado': 200,
+                'validar': True,
+                'mensaje': '¡Gracias por ponerte en contacto con nosotros! Tu mensaje ha sido enviado correctamente y nos pondremos en contacto contigo lo antes posible'
+            }, status = status.HTTP_201_CREATED)
+        else:
+            return http_400_bad_request(serializer.errors)
+    except KeyError:
+        return http_400_bad_request('Por favor, proporciona los datos obligatorios que faltan en la solicitud')
+    except exceptions.ValidationError:
+            return http_400_bad_request('Por favor, verifica que el correo esté escrito correctamente debido a que has ingresado uno no válido')
+    except exceptions.PermissionDenied:
+        return http_400_bad_request('No tienes permisos para realizar esta acción')
+    except Exception as e:
+        return http_500_internal_server_error(str(e))
 
 def http_400_bad_request(mensaje):
     return response.Response({
