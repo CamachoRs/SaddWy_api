@@ -226,15 +226,22 @@ def validate(request, token):
     try:
         id = tokens.RefreshToken(token)
         usuario = Usuario.objects.get(id = id.payload['user_id'])
-        usuario.estado = True        
-        usuario.save()
-        return response.Response({
-            'estado': 200,
-            'validar': True,
-            'mensaje': '¡Bienvenido de nuevo a SaddWy! Estamos encantados de tenerte de regreso'
-        }, status = status.HTTP_200_OK)
+        if not usuario.estado:
+            usuario.estado = True        
+            usuario.save()            
+            return response.Response({
+                'estado': 200,
+                'validar': True,
+                'mensaje': '¡Bienvenido de nuevo a SaddWy! Estamos encantados de tenerte de regreso'
+            }, status = status.HTTP_200_OK)
+        else:
+            return response.Response({
+                'estado': 200,
+                'validar': True,
+                'mensaje': 'Su cuenta ya ha sido validada anteriormente. ¡Disfrute de su experiencia en SaddWy!'
+            }, status = status.HTTP_200_OK)
     except (Usuario.DoesNotExist, TokenError.TokenError):
-        return http_400_bad_request('Lo siento, pero el tiempo límite para activar su cuenta ha expirado. Por favor, solicite un nuevo correo de activación')
+        return http_400_bad_request('Lo siento, pero el tiempo límite para activar su cuenta ha expirado. Por favor, regístrese nuevamente')
     except Exception as e:
         return http_500_internal_server_error(str(e))
 
@@ -944,4 +951,9 @@ class ProgresoView(viewsets.ModelViewSet):
 class FotoView(viewsets.ModelViewSet):
     queryset = FotoPredeterminada.objects.all()
     serializer_class = FotoSerializerAdmin
+    permission_classes = [permissions.IsAuthenticated]
+
+class Contactenos(viewsets.ModelViewSet):
+    queryset = Contactar.objects.all()
+    serializer_class = ContactarSerializer
     permission_classes = [permissions.IsAuthenticated]
