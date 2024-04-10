@@ -1,5 +1,3 @@
-from django.core.files.base import ContentFile
-from django.utils.text import slugify
 from smtplib import SMTPException
 from .models import *
 from .serializers import *
@@ -10,7 +8,7 @@ from django.db.models import Sum, Min
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import permissions, response, status, decorators, viewsets
 from rest_framework_simplejwt import tokens, exceptions as TokenError
-import difflib, re, jwt, imghdr, base64, io, random, datetime, json
+import difflib, re, jwt, imghdr, random, datetime, json
 
 @swagger_auto_schema(
     method = 'POST',
@@ -577,12 +575,12 @@ def editUser(request):
         token = request.headers.get('Authorization').split()[1]
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms = ["HS256"])
         usuario = Usuario.objects.get(id = payload['user_id'])
-        foto = request.data.get('foto')
+        foto = request.FILES.get('foto')
         nombre = request.data.get('nombre')
         password = request.data.get('password')
         
         if foto:
-            if imghdr.what(None, h = foto) not in ['jpeg', 'png']:
+            if not foto.name.lower().endswith(('.jpg', '.jpeg', '.png')):
                 return http_400_bad_request('Por favor, asegúrate de cargar una imagen en formato JPG o PNG para completar el proceso')
             if 'predeterminado' not in usuario.foto.path:
                 usuario.foto.delete()
@@ -616,7 +614,6 @@ def editUser(request):
 
         usuarioSerializer = UsuarioSerializer(instance = usuario, data = request.data, partial = True)
         if usuarioSerializer.is_valid():
-            usuario.save()
             usuarioSerializer.save()
             return response.Response({
                 'estado': 200,
@@ -825,7 +822,7 @@ def questions(request, id):
 
       - nombre: mensaje
         en: body
-        descripción: Mensaje del remitente (entre 100 y 1000 caracteres)
+        descripción: Mensaje del remitente (entre 15 y 255 caracteres)
         requerido: true
         tipo: string
     """
@@ -854,10 +851,10 @@ def ContactUs(request):
         else:
             validators.validate_email(correo)
         
-        if len(mensaje) < 100:
-            return http_400_bad_request('Por favor, ingrese un mensaje válido con un mínimo de 100 caracteres')
-        elif len(mensaje) > 1000:
-            return http_400_bad_request('Por favor, ingrese un mensaje válido con un máximo de 1000 caracteres')
+        if len(mensaje) < 15:
+            return http_400_bad_request('Por favor, ingrese un mensaje válido con un mínimo de 15 caracteres')
+        elif len(mensaje) > 255:
+            return http_400_bad_request('Por favor, ingrese un mensaje válido con un máximo de 255 caracteres')
         
         serializer = ContactarSerializer(data = request.data)
         if serializer.is_valid():
