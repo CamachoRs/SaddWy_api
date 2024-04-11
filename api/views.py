@@ -71,7 +71,7 @@ def register(request):
         if len(password) < 8:
             return http_400_bad_request('Por favor, ingresa una contraseña con un mínimo de 8 caracteres')
         elif ' ' in password:
-            return http_400_bad_request('Por favor, asegurate que tu contraseña no contenga espacios')
+            return http_400_bad_request('Por favor, asegúrate que tu contraseña no contenga espacios')
         elif not re.search(r'[A-Z]', password):
             return http_400_bad_request('Por favor, asegúrate de incluir al menos una letra mayúscula en tu contraseña')
         elif not re.search(r'[a-z]', password):
@@ -99,7 +99,7 @@ def register(request):
             mensaje = f"""
                 Estimada/o {usuario.nombre},
 
-                ¡Bienvenido/a a nuestro portal de programación! Estamos encantados de que te hayas registrado con nosotros.
+                ¡Bienvenida/o a nuestro portal de programación! Estamos encantados de que te hayas registrado con nosotros.
 
                 Para completar el proceso de registro y validar tu cuenta, por favor haz clic en el siguiente enlace:
 
@@ -150,7 +150,7 @@ def register(request):
     Este endpoint permite a los usuarios iniciar sesión en el sistema proporcionando su correo electrónico y contraseña válidos.
 
     ---
-    parametros
+    parámetros
       - nombre: correo
         en: body
         descripción: Correo electrónico del usuario.
@@ -256,7 +256,7 @@ def validate(request, token):
     Este endpoint permite a los usuarios solicitar la recuperación de su contraseña. Se envía un correo electrónico con un enlace único para restablecer la contraseña.
 
     ---
-    parametros
+    parámetros
       - nombre: correo
         en: body
         descripción: Correo electrónico asociado a la cuenta del usuario.
@@ -330,7 +330,7 @@ def recoveryEmail(request):
     Una vez redirigidos aquí desde el enlace, se solicita al usuario ingresar una nueva contraseña.
 
     ---
-    parametros
+    parámetros
       - nombre: password
         en: body
         descripción: Nueva contraseña para la cuenta del usuario (al menos 8 caracteres, al menos un carácter especial, al menos una letra mayúscula, al menos una letra minúscula, al menos un número, sin espacios y sin similitud con el nombre o correo).
@@ -348,7 +348,7 @@ def recoverAccount(request, token):
         if len(password) < 8:
             return http_400_bad_request('Por favor, ingresa una contraseña con un mínimo de 8 caracteres')
         elif ' ' in password:
-            return http_400_bad_request('Por favor, asegurate que tu contraseña no contenga espacios')
+            return http_400_bad_request('Por favor, asegúrate que tu contraseña no contenga espacios')
         elif not re.search(r'[A-Z]', password):
             return http_400_bad_request('Por favor, asegúrate de incluir al menos una letra mayúscula en tu contraseña')
         elif not re.search(r'[a-z]', password):
@@ -391,7 +391,7 @@ def recoverAccount(request, token):
     Este endpoint permite a un usuario autenticado obtener información detallada de su perfil, incluyendo su información personal y su progreso en la aplicación.
 
     ---
-    parametros
+    parámetros
     - nombre: Authorization
         en: header
         descripción: Token de autenticación del usuario.
@@ -444,7 +444,7 @@ def profile(request):
     Este endpoint permite a los usuarios autorizados visualizar las tarjetas de los lenguajes disponibles, junto con sus niveles respectivos. Los niveles que están marcados como activos están permitidos para que el usuario pueda comenzar las actividades y desbloquear más niveles.
 
     ---
-    parametros
+    parámetros
     - nombre: Authorization
         en: header
         descripción: Token de autenticación del usuario.
@@ -480,7 +480,7 @@ def cards(request):
     Este endpoint permite a los usuarios autenticados explorar el ranking de usuarios y comparar sus puntos con otros participantes en la plataforma. Además de proporcionar una visión general del ranking, también muestra la posición actual del usuario autenticado.
     
     ---
-    parametros
+    parámetros
     - nombre: Authorization
         en: header
         descripción: Token de autenticación del usuario.
@@ -541,7 +541,7 @@ def ranking(request):
     Este endpoint permite a los usuarios autenticados editar su información personal, incluyendo la foto de perfil, nombre y contraseña.
 
     ---
-    parametros
+    parámetros
     - nombre: Authorization
         en: header
         descripción: Token de autenticación del usuario.
@@ -595,7 +595,7 @@ def editUser(request):
             if len(password) < 8:
                 return http_400_bad_request('Por favor, ingresa una contraseña con un mínimo de 8 caracteres')
             elif ' ' in password:
-                return http_400_bad_request('Por favor, asegurate que tu contraseña no contenga espacios')
+                return http_400_bad_request('Por favor, asegúrate que tu contraseña no contenga espacios')
             elif not re.search(r'[A-Z]', password):
                 return http_400_bad_request('Por favor, asegúrate de incluir al menos una letra mayúscula en tu contraseña')
             elif not re.search(r'[a-z]', password):
@@ -648,7 +648,7 @@ def editUser(request):
     Este endpoint permite a los usuarios autenticados obtener una pregunta específica mediante su ID.
     
     ---
-    parametros:
+    parámetros:
     - nombre: id
       en: path
       descripción: ID de la pregunta que se desea obtener.
@@ -677,7 +677,7 @@ def editUser(request):
     Este endpoint permite a los usuarios autenticados actualizar su progreso y estado al completar preguntas en un nivel específico.
 
     ---
-    parametros:
+    parámetros:
     - nombre: id
       en: path
       descripción: ID de la pregunta que se ha completado.
@@ -810,7 +810,7 @@ def questions(request, id):
 
       - nombre: celular
         en: body
-        descripción: Número de celular del remitente (debe tener formato Colombiano, iniciando con 3 y teniendo 10 digitos de longitud)
+        descripción: Número de celular del remitente (debe tener formato Colombiano, iniciando con 3 y teniendo 10 dígitos de longitud)
         requerido: true
         tipo: string
 
