@@ -578,7 +578,8 @@ def editUser(request):
         foto = request.FILES.get('foto')
         nombre = request.data.get('nombre')
         password = request.data.get('password')
-        
+        datos = request.data.copy()
+
         if foto:
             if not foto.name.lower().endswith(('.jpg', '.jpeg', '.png')):
                 return http_400_bad_request('Por favor, asegúrate de cargar una imagen en formato JPG o PNG para completar el proceso')
@@ -590,7 +591,9 @@ def editUser(request):
                 return http_400_bad_request('Por favor, ingrese un nombre válido con longitud de 10 a 30 caracteres')
             elif any(caracter.isdigit() for caracter in nombre):
                 return http_400_bad_request('Por favor, evite incluir números en el nombre')
-
+        else:
+            nombre = usuario.nombre
+            
         if password:
             if len(password) < 8:
                 return http_400_bad_request('Por favor, ingresa una contraseña con un mínimo de 8 caracteres')
@@ -610,9 +613,9 @@ def editUser(request):
                     return http_400_bad_request('Por favor, asegúrate de incluir al menos un carácter especial en tu contraseña')
                 elif similitud_1 > 0.5 and similitud_2 > 0.5:
                     return http_400_bad_request('Por favor, elige una contraseña que no contenga información personal')
-            request.data['password'] = make_password(password)
+            datos['password'] = make_password(password)
 
-        usuarioSerializer = UsuarioSerializer(instance = usuario, data = request.data, partial = True)
+        usuarioSerializer = UsuarioSerializer(instance = usuario, data = datos, partial = True)
         if usuarioSerializer.is_valid():
             usuarioSerializer.save()
             return response.Response({
