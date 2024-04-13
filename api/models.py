@@ -24,7 +24,7 @@ class UsuarioManager(BaseUserManager):
 
 class Usuario(AbstractBaseUser):
     foto = models.ImageField(upload_to = 'usuario/')
-    nombre = models.CharField(max_length = 50)
+    nombre = models.CharField(max_length = 30)
     correo = models.EmailField(unique = True)
     racha = models.JSONField(default = {
         'Lunes': False, 'Martes': False,
@@ -81,7 +81,7 @@ class Progreso(models.Model):
     lenguaje = models.ForeignKey(Lenguaje, on_delete = models.CASCADE, limit_choices_to = {'estado': True})
     progresoLenguaje = models.FloatField(default = 0)
     puntos = models.PositiveIntegerField(default = 0)
-    nivelesPermitidos = models.JSONField()
+    nivelesCompletados = models.JSONField(default = dict)
     registro = models.DateTimeField(auto_now = True)
     
 class FotoPredeterminada(models.Model):

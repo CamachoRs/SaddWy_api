@@ -50,6 +50,7 @@ def register(request):
         nombre = request.data['nombre']
         correo = request.data['correo']
         password = request.data['password']
+        datos = request.data.copy()
 
         if len(nombre) < 10 or len(nombre) > 30:
             return http_400_bad_request('Por favor, ingrese un nombre válido con longitud de 10 a 30 caracteres')
@@ -87,12 +88,10 @@ def register(request):
             elif similitud_1 > 0.5 and similitud_2 > 0.5:
                 return http_400_bad_request('Por favor, elige una contraseña que no contenga información personal')
     
-        request.data['password'] = make_password(password)
-        if FotoPredeterminada.objects.count() > 0:
-            idFoto = random.randint(1, FotoPredeterminada.objects.count())
-            request.data['foto'] = FotoPredeterminada.objects.get(id = idFoto).foto
-
-        serializer = UsuarioSerializer(data = request.data)
+        datos['password'] = make_password(password)
+        foto = FotoPredeterminada.objects.all()
+        datos['foto'] = foto[random.randint(0, (FotoPredeterminada.objects.count() - 1))]
+        serializer = UsuarioSerializer(data = datos)
         if serializer.is_valid():
             usuario = serializer.save()
             token = tokens.RefreshToken.for_user(usuario)
@@ -115,7 +114,7 @@ def register(request):
                 SaddWy
             """
             mail.send_mail(
-                '¡Bienvenido a SaddWy! Confirma tu cuenta para comenzar',
+                '¡Bienvenida/o a SaddWy! Confirma tu cuenta para comenzar',
                 mensaje,
                 settings.EMAIL_HOST_USER,
                 [usuario.correo],
@@ -182,14 +181,13 @@ def login(request):
         if not check_password(password, usuario.password):
             return http_400_bad_request('Lo siento, el correo y/o contraseña ingresados son incorrectos. Por favor, inténtalo nuevamente')
 
-        usuarioSerializer = UsuarioSerializer(usuario)
-        token = tokens.RefreshToken.for_user(usuario) 
         if not usuario.administrador:
             for lenguaje in Lenguaje.objects.filter(estado = True):
                 if not Progreso.objects.filter(usuario = usuario, lenguaje = lenguaje).exists():
-                    nivelesPermitidos = {nivel.nombre: (indice == 0) for indice, nivel in enumerate(Nivel.objects.filter(lenguaje = lenguaje))}
-                    Progreso.objects.create(usuario = usuario, lenguaje = lenguaje, nivelesPermitidos = nivelesPermitidos)
+                    Progreso.objects.create(usuario = usuario, lenguaje = lenguaje)
 
+        usuarioSerializer = UsuarioSerializer(usuario)
+        token = tokens.RefreshToken.for_user(usuario) 
         return response.Response({
             'estado': 200,
             'validar': True,
@@ -457,7 +455,7 @@ def profile(request):
 @decorators.permission_classes([permissions.IsAuthenticated])
 def cards(request):
     try:    
-        serializer = CartaSerializer(Lenguaje.objects.filter(estado = True), many = True, context = {'request': request})
+        serializer = CartaSerializer(Lenguaje.objects.filter(estado = True), many = True)
         return response.Response({
             'estado': 200,
             'validar': True,
@@ -741,34 +739,20 @@ def questions(request, id):
             nombreDia = dias.get(datetime.datetime.now().strftime("%A"))
             usuario.racha[nombreDia] = True
             usuario.save()
-            nivelesPermitidos = progreso.nivelesPermitidos
-            if nombreNivel in nivelesPermitidos:
-                listaNiveles = list(nivelesPermitidos.keys())
-                posicion = listaNiveles.index(nombreNivel)
-                if posicion + 1 < len(listaNiveles):
-                    siguienteNivel = listaNiveles[posicion + 1]
-                    if not nivelesPermitidos[siguienteNivel]:
-                        if nivel.totalPreguntas <= intentos:
-                            progreso.puntos += nivel.totalPreguntas
-                        else:
-                            progreso.puntos += (nivel.totalPreguntas - intentos) * 2 + nivel.totalPreguntas
-                        
-                        nivelesPermitidos[siguienteNivel] = True
-                    else:
-                        return response.Response({
-                            'estado': 200,
-                            'validar': True,
-                            'mensaje': f'¡Felicitaciones! Ya has completado el nivel {siguienteNivel} anteriormente'
-                        })
-                
-                if posicion == len(listaNiveles):
-                    if nivel.totalPreguntas <= intentos:
-                        progreso.puntos += nivel.totalPreguntas
-                    else:
-                        progreso.puntos += (nivel.totalPreguntas - intentos) * 2 + nivel.totalPreguntas
-                    
-            num_nivelesPermitidos = sum(valor for valor in progreso.nivelesPermitidos.values() if valor)
-            progreso.progresoLenguaje = (num_nivelesPermitidos - 1)*100 / nivel.totalPreguntas
+            nivelesCompletados = progreso.nivelesCompletados
+            if nombreNivel not in nivelesCompletados:
+                if nivel.totalPreguntas <= intentos:
+                    progreso.puntos += nivel.totalPreguntas
+                else:
+                    progreso.puntos += (nivel.totalPreguntas - intentos) * 2 + nivel.totalPreguntas
+                nivelesCompletados[nombreNivel] = True
+            else:
+                return response.Response({
+                    'estado': 200,
+                    'validar': True,
+                    'mensaje': f'¡Felicitaciones! Ya has completado el {nombreNivel} anteriormente'
+                })
+            progreso.progresoLenguaje = len(nivelesCompletados) * 100 / Nivel.objects.filter(lenguaje = nivel.lenguaje, estado = True).count()
             progreso.save()
             return response.Response({
                 'estado': 200,

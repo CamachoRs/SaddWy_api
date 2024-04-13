@@ -18,7 +18,7 @@ class PreguntaAdmin(admin.ModelAdmin):
     list_display = ['id', 'nivel', 'explanation', 'pregunta', 'respuesta', 'estado', 'registro']
 
 class ProgresoAdmin(admin.ModelAdmin):
-    list_display = ['id', 'usuario', 'lenguaje', 'progresoLenguaje', 'puntos', 'nivelesPermitidos', 'registro']
+    list_display = ['id', 'usuario', 'lenguaje', 'progresoLenguaje', 'puntos', 'nivelesCompletados', 'registro']
 
 class ContactarAdmin(admin.ModelAdmin):
     list_display = ['id', 'nombre', 'celular', 'correo', 'mensaje', 'registro']

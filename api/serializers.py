@@ -42,22 +42,7 @@ class PreguntaSerializer(serializers.ModelSerializer):
         fields = ['nivel', 'explanation', 'pregunta', 'respuesta']
 
 class CartaSerializer(serializers.ModelSerializer):
-    niveles = serializers.SerializerMethodField()
-  
-    def get_niveles(self, obj):
-        niveles = obj.nivel_set.filter(estado = True)
-        nivelData = NivelSerializer(niveles, many = True).data
-        usuario = self.context['request'].user
-        nivelesPermitidos = Progreso.objects.get(usuario = usuario, lenguaje = obj).nivelesPermitidos
-
-        for nivel in nivelData:
-            nombre = nivel['nombre']
-            nivel['permitido'] = nivelesPermitidos.get(nombre)
-
-        if nivelData:
-            nivelData[-1].pop('nivelesPermitidos', None)
-
-        return nivelData
+    niveles = NivelSerializer(many = True, read_only = True, source = 'nivel_set')
     
     class Meta:
         model = Lenguaje
