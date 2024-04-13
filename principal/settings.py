@@ -65,8 +65,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=3),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes = 10),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days = 1),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
@@ -112,8 +112,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'principal.wsgi.application'
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
+
 CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:4200'
+]
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -170,5 +175,3 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'saddwy2003@gmail.com'
 EMAIL_HOST_PASSWORD = 'lsax enyl spoz oscj'
-
-BASE_URL = 'http://127.0.0.1:8000' # esto lo debo cambiar

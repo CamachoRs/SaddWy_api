@@ -186,14 +186,14 @@ def login(request):
                 if not Progreso.objects.filter(usuario = usuario, lenguaje = lenguaje).exists():
                     Progreso.objects.create(usuario = usuario, lenguaje = lenguaje)
 
-        usuarioSerializer = UsuarioSerializer(usuario)
+        usuarioSerializer = UsuarioSerializer(usuario, context = {'request': request})
         token = tokens.RefreshToken.for_user(usuario) 
         return response.Response({
             'estado': 200,
             'validar': True,
             'mensaje': '¡Inicio de sesión exitoso!',
             'dato': {
-                'foto': settings.BASE_URL + usuarioSerializer.data['foto'],
+                'foto': usuarioSerializer.data['foto'],
                 'nombre': usuarioSerializer.data['nombre'],
                 'acceso': str(token.access_token),
                 'actualizar': str(token),
@@ -405,7 +405,7 @@ def profile(request):
         token = request.headers.get('Authorization').split()[1]
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms = ["HS256"])
         usuario = Usuario.objects.get(id = payload['user_id'])
-        usuarioSerializer = UsuarioSerializer(usuario)
+        usuarioSerializer = UsuarioSerializer(usuario, context = {'request': request})
         progresoSerializer = ProgresoSerializer(Progreso.objects.filter(usuario = usuario.id), many = True)
         return response.Response({
             'estado': 200,
@@ -413,7 +413,7 @@ def profile(request):
             'mensaje': '',
             'dato': {
                 'usuario': {
-                    'foto': settings.BASE_URL + usuarioSerializer.data['foto'],
+                    'foto': usuarioSerializer.data['foto'],
                     'nombre': usuarioSerializer.data['nombre'],
                     'correo': usuarioSerializer.data['correo'],
                     'racha': usuarioSerializer.data['racha'],
@@ -455,7 +455,7 @@ def profile(request):
 @decorators.permission_classes([permissions.IsAuthenticated])
 def cards(request):
     try:    
-        serializer = CartaSerializer(Lenguaje.objects.filter(estado = True), many = True)
+        serializer = CartaSerializer(Lenguaje.objects.filter(estado = True), many = True, context = {'request': request})
         return response.Response({
             'estado': 200,
             'validar': True,
@@ -613,7 +613,7 @@ def editUser(request):
                     return http_400_bad_request('Por favor, elige una contraseña que no contenga información personal')
             datos['password'] = make_password(password)
 
-        usuarioSerializer = UsuarioSerializer(instance = usuario, data = datos, partial = True)
+        usuarioSerializer = UsuarioSerializer(instance = usuario, data = datos, context = {'request': request}, partial = True)
         if usuarioSerializer.is_valid():
             usuarioSerializer.save()
             return response.Response({
@@ -621,7 +621,7 @@ def editUser(request):
                 'validar': True,
                 'mensaje': '¡Información actualizada exitosamente!',
                 'dato': {
-                    'foto': settings.BASE_URL + usuarioSerializer.data['foto'],
+                    'foto': usuarioSerializer.data['foto'],
                     'nombre': usuarioSerializer.data['nombre'],
                     'correo': usuarioSerializer.data['correo'],
                 }
