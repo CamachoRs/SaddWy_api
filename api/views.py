@@ -90,7 +90,7 @@ def register(request):
     
         datos['password'] = make_password(password)
         foto = FotoPredeterminada.objects.all()
-        datos['foto'] = foto[random.randint(0, (FotoPredeterminada.objects.count() - 1))]
+        datos['foto'] = foto[random.randint(0, (FotoPredeterminada.objects.count() - 1))].foto
         serializer = UsuarioSerializer(data = datos)
         if serializer.is_valid():
             usuario = serializer.save()
