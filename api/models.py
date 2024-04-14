@@ -79,7 +79,7 @@ class Pregunta(models.Model):
 class Progreso(models.Model):
     usuario =  models.ForeignKey(Usuario, on_delete = models.CASCADE, limit_choices_to = {'estado': True})
     lenguaje = models.ForeignKey(Lenguaje, on_delete = models.CASCADE, limit_choices_to = {'estado': True})
-    progresoLenguaje = models.FloatField(default = 0)
+    progresoLenguaje = models.PositiveIntegerField(default = 0)
     puntos = models.PositiveIntegerField(default = 0)
     nivelesCompletados = models.JSONField(default = dict)
     registro = models.DateTimeField(auto_now = True)
