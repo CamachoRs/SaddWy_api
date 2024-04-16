@@ -406,7 +406,7 @@ def profile(request):
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms = ["HS256"])
         usuario = Usuario.objects.get(id = payload['user_id'])
         usuarioSerializer = UsuarioSerializer(usuario, context = {'request': request})
-        progresoSerializer = ProgresoSerializer(Progreso.objects.filter(usuario = usuario.id), many = True)
+        progresoSerializer = ProgresoSerializer(Progreso.objects.filter(usuario = usuario.id), many = True, context = {'request': request})
         return response.Response({
             'estado': 200,
             'validar': True,

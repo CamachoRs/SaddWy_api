@@ -1,6 +1,6 @@
-from django.conf import settings
 from .models import *
 from rest_framework import serializers
+from django.contrib.sites.shortcuts import get_current_site
 
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
@@ -12,7 +12,8 @@ class ProgresoSerializer(serializers.ModelSerializer):
     lenguajeNombre = serializers.SerializerMethodField()
     
     def get_lenguajeLogo(self, obj):
-        return f'http://127.0.0.1:8000{obj.lenguaje.logo.url}'
+        current_site = get_current_site(self.context['request'])
+        return f"{self.context['request'].scheme}://{current_site}{obj.lenguaje.logo.url}"
     
     def get_lenguajeNombre(self, obj):
         return obj.lenguaje.nombre
