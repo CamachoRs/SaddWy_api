@@ -116,7 +116,7 @@ CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOWED_ORIGINS = ['http://localhost:4200']
+CORS_ALLOWED_ORIGINS = ['https://saddwy-v1.vercel.app/']
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
