@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-wd84syc^yv0padub7c)q%rxu06m5nvi$h3#w+cbkq&&v!#18%i
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*'] #Esto se debe cambiar a la url de la api publicada
+ALLOWED_HOSTS = ['http://localhost:4200']
 
 # Application definition
 INSTALLED_APPS = [
@@ -116,9 +116,7 @@ CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:4200'
-]
+CORS_ALLOWED_ORIGINS = ['http://localhost:4200']
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
